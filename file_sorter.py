@@ -47,6 +47,9 @@ def parse_json(filename):
            # print(block["id"])
             block_text = block["mentionText"]
             block_type = block["type"]
+            if block_type not in ["headings","inset","body_text","graphics_caption"]:
+                print(block_type)
+                continue
             if "page" in block["pageAnchor"]["pageRefs"][0]:
                 block_page = block["pageAnchor"]["pageRefs"][0]["page"]
             else:
