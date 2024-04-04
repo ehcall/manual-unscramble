@@ -6,8 +6,7 @@ from functools import cmp_to_key
 """
 
 def compare_09(block1, block2):
-    ## works for style 9
-    ## check style 1 and 8?
+    ## works for style 1, 1.5, 9
     vertex1 = block1["vertices"][2]
     vertex2 = block2["vertices"][2]
 
@@ -28,12 +27,57 @@ def compare_09(block1, block2):
             return 1
 
 
+def compare_08(block1, block2):
+    vertex1 = block1["vertices"][2]
+    vertex2 = block2["vertices"][2]
+    text1 = block1["text"]
+    text2 = block2["text"]
+
+def section_08(page_text):
+    sections = {}
+    section_headings = ["Additional\nInformation","Information\nfor the\n Teacher","Information\nfor the\nTeacher", "Lesson\nPresentation", "Assignment\nfor the\nComing Lesson"]
+    i = 0
+    sections[i] = {'blocks':[]}
+    section_coords = [0]
+    for block in page_text:
+     #   print(block)
+        if block["text"] in section_headings:
+            i+=1
+            sections[i] = {
+                'heading': block,
+                'blocks': []
+            }
+            section_coords.append(block['vertices'][2]['y'])
+
+    sorted_coords = sorted(section_coords)
+  #  print(sorted_coords)
+    for block in page_text:
+        if block["text"] not in section_headings:
+            block_vertex = block['vertices'][2]['y']
+            if len(sorted_coords) == 1:
+                sections[0]['blocks'].append(block)
+            else:
+                for j, heading_vertex in enumerate(sorted_coords):
+
+                    if abs(block_vertex - heading_vertex) < .05:
+                        sections[j]['blocks'].append(block)
+                        break
+                    elif block_vertex < heading_vertex:
+                        sections[j - 1]['blocks'].append(block)
+                        break
+                    elif len(sorted_coords) == j + 1:
+                        sections[j]['blocks'].append(block)
+                        break
+                    #else:
+                     #   print("\t\t\t",block['text'])
+        else:
+            pass
+    return sections
 
 def compare_07(block1, block2):
     vertex1 = block1["vertices"][2]
     vertex2 = block2["vertices"][2]
-    # works for styles 7 and 10
-    # check styles 2 and 6
+    # works for styles 2, 6, 7 and 10
 
     if abs(float(vertex1['y']) - float(vertex2['y'])) < 0.01:
         '''
@@ -59,7 +103,6 @@ def compare_07(block1, block2):
         elif vertex1['x'] > vertex2['x']:
             return 1
 
-
 def process(filename, style):
     pages = {}
     with open("lesson_blocks\\" + style + "\\" + filename, encoding="utf-8") as f:
@@ -69,16 +112,25 @@ def process(filename, style):
 
     all_lesson_blocks = []
     for page in pages:
-        if style in ["style_07", "style_10"]:
+        if style in ["style_07", "style_10", "style_02", "style_06"]:
             sorted_text = sorted(pages[page], key=cmp_to_key(compare_07))
-        elif style in ["style_09"]:
+        elif style in ["style_09", "style_01", "style_01-5"]:
             sorted_text = sorted(pages[page], key=cmp_to_key(compare_09))
+        elif style in ["style_08"]:
+            sorted_text = []
+            sections = section_08(pages[page])
+            for section in sections:
+                print("...................new section")
+                if 'heading' in sections[section]:
+                    sorted_text.append(sections[section]['heading'])
+                sorted_section = sorted(sections[section]['blocks'], key=cmp_to_key(compare_07))
+                sorted_text.extend(sorted_section)
         for text in sorted_text:
-            print(text['text'])
+            print(text["text"])
         all_lesson_blocks.extend(sorted_text)
     return all_lesson_blocks
 
-style = "style_09"
+style = "style_08"
 for file in os.listdir("labeled_files\\" + style + "\\"):
     lesson = process(file, style)
     wait = input("wait here")
