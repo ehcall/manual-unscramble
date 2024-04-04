@@ -7,9 +7,9 @@ from natsort import os_sorted
 """
  Takes downloaded files from DocumentAI export and saves them in this project, renaming them in the process
 """
-def save_files(style_folder):
-    source_path = "C:\\Users\elena\Documents\Manuals\Google Labeled\\" + style_folder + "\\"
-    dest_path = "labeled_files\\" + style_folder
+def save_files(style):
+    source_path = "C:\\Users\elena\Documents\Manuals\Google Labeled\\" + style + "\\"
+    dest_path = "labeled_files\\" + style
     origin_files = {}
     name_files = []
     for root, dirs, files in os.walk(source_path):
@@ -18,11 +18,11 @@ def save_files(style_folder):
                 origin = os.path.join(root, name)
                 origin_files[name] = origin
                 name_files.append(name)
-                print(name)
+               # print(name)
     for i, edited in enumerate(os_sorted(name_files)):
-        print(i, edited, origin_files[edited])
+       # print(i, edited, origin_files[edited])
         new_name = dest_path + "\\" + edited[0:10] + str(i+1) + ".json"
-        print(new_name)
+       # print(new_name)
         shutil.copy(origin_files[edited], new_name)
 
 """
@@ -35,10 +35,10 @@ def save_files(style_folder):
  
  returns the simplified dictionary
 """
-def parse_json(filename):
+def parse_json(filename, style):
+   # print("parsing json...")
     lesson = {}
-    # TODO: adjust this to be dynamic
-    with open("labeled_files\style_10\\" + filename, encoding="utf-8") as f:
+    with open("labeled_files\\" + style + "\\" + filename, encoding="utf-8") as f:
         lesson_json = json.load(f)
         page_blocks = lesson_json["entities"]
         #print(page_blocks)
@@ -47,7 +47,7 @@ def parse_json(filename):
            # print(block["id"])
             block_text = block["mentionText"]
             block_type = block["type"]
-            if block_type not in ["headings","inset","body_text","graphics_caption"]:
+            if block_type not in ["headings","inset","body-text","body_text","graphics_caption","graphics-caption"]:
                 print(block_type)
                 continue
             if "page" in block["pageAnchor"]["pageRefs"][0]:
@@ -65,18 +65,20 @@ def parse_json(filename):
     return (lesson)
 
 
-def save_json(filename, lesson):
-    new_filepath = "lesson_blocks\\style_10\\" + filename
+def save_json(filename, lesson, style):
+    new_filepath = "lesson_blocks\\" + style + "\\" + filename
     with open(new_filepath, 'w') as file:
         json.dump(lesson, file, indent=4)
 
 # save_files("style_07")
 
-
-for file in os.listdir("labeled_files\\style_10\\"):
-    lesson = parse_json(file)
+style = "style_06"
+save_files(style)
+for file in os.listdir("labeled_files\\" + style + "\\"):
+    # print("looping...")
+    lesson = parse_json(file, style)
    # print(lesson)
-    save_json(file, lesson)
+    save_json(file, lesson, style)
 
 #filename = "BM_2023_A-10-273-1-5.json"
 #lesson = parse_json(filename)
