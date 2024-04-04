@@ -26,13 +26,6 @@ def compare_09(block1, block2):
         else:
             return 1
 
-
-def compare_08(block1, block2):
-    vertex1 = block1["vertices"][2]
-    vertex2 = block2["vertices"][2]
-    text1 = block1["text"]
-    text2 = block2["text"]
-
 def section_08(page_text):
     sections = {}
     section_headings = ["Additional\nInformation","Information\nfor the\n Teacher","Information\nfor the\nTeacher", "Lesson\nPresentation", "Assignment\nfor the\nComing Lesson"]
@@ -78,31 +71,32 @@ def compare_07(block1, block2):
     vertex1 = block1["vertices"][2]
     vertex2 = block2["vertices"][2]
     # works for styles 2, 6, 7 and 10
-
-    if abs(float(vertex1['y']) - float(vertex2['y'])) < 0.01:
-        '''
-            if the blocks are on the same row, prioritize columns
-        '''
-        if vertex1['x'] < vertex2['x']:
-            return -1
-        elif vertex1['x'] > vertex2['x']:
-            return 1
+    try:
+        if abs(float(vertex1['y']) - float(vertex2['y'])) < 0.01:
+            '''
+                if the blocks are on the same row, prioritize columns
+            '''
+            if vertex1['x'] < vertex2['x']:
+                return -1
+            elif vertex1['x'] > vertex2['x']:
+                return 1
+            else:
+                return 0
+        elif abs(float(vertex1['x']) - float(vertex2['x'])) < 0.1:
+            '''
+                if the blocks are in the same column, prioritize rows
+            '''
+            if vertex1['y'] > vertex2['y']:
+                return 1
+            elif vertex1['y'] < vertex2['y']:
+                return -1
         else:
-            return 0
-    elif abs(float(vertex1['x']) - float(vertex2['x'])) < 0.1:
-        '''
-            if the blocks are in the same column, prioritize rows
-        '''
-        if vertex1['y'] > vertex2['y']:
-            return 1
-        elif vertex1['y'] < vertex2['y']:
-            return -1
-    else:
-        if vertex1['x'] < vertex2['x']:
-            return -1
-        elif vertex1['x'] > vertex2['x']:
-            return 1
-
+            if vertex1['x'] < vertex2['x']:
+                return -1
+            elif vertex1['x'] > vertex2['x']:
+                return 1
+    except:
+        return 0
 def process(filename, style):
     pages = {}
     with open("lesson_blocks\\" + style + "\\" + filename, encoding="utf-8") as f:
@@ -120,18 +114,26 @@ def process(filename, style):
             sorted_text = []
             sections = section_08(pages[page])
             for section in sections:
-                print("...................new section")
                 if 'heading' in sections[section]:
                     sorted_text.append(sections[section]['heading'])
                 sorted_section = sorted(sections[section]['blocks'], key=cmp_to_key(compare_07))
                 sorted_text.extend(sorted_section)
-        for text in sorted_text:
-            print(text["text"])
+       # for text in sorted_text:
+           # print(text["text"])
         all_lesson_blocks.extend(sorted_text)
     return all_lesson_blocks
 
-style = "style_08"
-for file in os.listdir("labeled_files\\" + style + "\\"):
-    lesson = process(file, style)
-    wait = input("wait here")
-    #print(lesson)
+def XMLize(lesson_blocks, style, filename):
+    filename = 'simple_XML_lessons\\' + style + "\\" + filename + ".xml"
+    with open(filename, 'w', encoding='utf-8') as xml_file:
+        for lesson_block in lesson_blocks:
+            A_tag = "<" + lesson_block["type"] + ">"
+            Z_tag = "</" + lesson_block["type"] + ">\n"
+            file_line = " ".join([A_tag, lesson_block['text'],Z_tag])
+            xml_file.write(file_line)
+
+styles = ['style_01', 'style_01-5', 'style_02', 'style_06', 'style_07', 'style_08', 'style_09']
+for style in styles:
+    for file in os.listdir("labeled_files\\" + style + "\\"):
+        lesson = process(file, style)
+        XMLize(lesson, style, file[:-5])
