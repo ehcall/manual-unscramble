@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import shutil
 import random
 import string
@@ -36,6 +37,7 @@ def save_files(style):
  returns the simplified dictionary
 """
 def parse_json(filename, style):
+   # print(filename)
    # print("parsing json...")
     lesson = {}
     with open("labeled_files\\" + style + "\\" + filename, encoding="utf-8") as f:
@@ -45,18 +47,24 @@ def parse_json(filename, style):
         lesson[filename] = {}
         for block in page_blocks:
            # print(block["id"])
-            block_text = block["mentionText"]
-            block_type = block["type"]
-            if block_type not in ["headings","inset","body-text","body_text","graphics_caption","graphics-caption"]:
-                print(block_type)
-                continue
-            if "page" in block["pageAnchor"]["pageRefs"][0]:
-                block_page = block["pageAnchor"]["pageRefs"][0]["page"]
-            else:
-                block_page = 0
-            block_vertices = block["pageAnchor"]["pageRefs"][0]["boundingPoly"]["normalizedVertices"]
+           try:
+                 block_text = block["mentionText"]
+           except:
+               block_test = ""
+           block_type = block["type"]
+           if block_type in ["a-2-flowing-columns","a-2-columns","a-1-column"]:
+               block_text = block_type
+           elif block_type not in ["heading","inset","body-text","body_text","graphics_caption","graphics-caption"]:
+                 print(block_type)
+                 continue
 
-            lesson[filename][block["id"]] = {
+           if "page" in block["pageAnchor"]["pageRefs"][0]:
+                block_page = block["pageAnchor"]["pageRefs"][0]["page"]
+           else:
+                block_page = 0
+           block_vertices = block["pageAnchor"]["pageRefs"][0]["boundingPoly"]["normalizedVertices"]
+
+           lesson[filename][block["id"]] = {
                 "text": block_text,
                 "page": block_page,
                 "vertices": block_vertices,
@@ -72,13 +80,17 @@ def save_json(filename, lesson, style):
 
 # save_files("style_07")
 
-style = "style_06"
+style = "other-teaching"
 save_files(style)
 for file in os.listdir("labeled_files\\" + style + "\\"):
-    # print("looping...")
-    lesson = parse_json(file, style)
-   # print(lesson)
-    save_json(file, lesson, style)
+    if re.search('_S', file):
+        print(file)
+        pass
+    else:
+        # print("looping...")
+        lesson = parse_json(file, style)
+       # print(lesson)
+        save_json(file, lesson, style)
 
 #filename = "BM_2023_A-10-273-1-5.json"
 #lesson = parse_json(filename)
